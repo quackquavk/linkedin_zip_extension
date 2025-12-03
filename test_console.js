@@ -1,4 +1,5 @@
-// LinkedIn Zip Puzzle Solver - Content Script
+// LinkedIn Zip Puzzle Solver - Console Test Script
+// Copy and paste this entire script into the browser console on a LinkedIn Zip puzzle page
 
 function playZipPuzzle() {
   const cells = document.querySelectorAll("[data-cell-idx]");
@@ -46,7 +47,35 @@ function playZipPuzzle() {
   }
 
   let maxNumber = 0;
-  const wallMap = new Map(); // Track walls by cell: {row,col} -> {top, right, bottom, left}
+  const wallMap = new Map(); // Track walls by cell
+
+  // Helper function to detect walls on each side of a cell
+  function detectCellWalls(cell) {
+    const walls = { top: false, right: false, bottom: false, left: false };
+
+    // Look for child divs with specific wall classes
+    // LinkedIn uses:
+    // - _2f62539a for bottom walls (border-bottom-width: 12px)
+    // - _30c7ac6a for left walls (border-left-width: 12px)
+
+    const childDivs = cell.querySelectorAll("div");
+
+    childDivs.forEach((div) => {
+      const classes = div.className;
+
+      // Check for bottom wall
+      if (classes.includes("_2f62539a")) {
+        walls.bottom = true;
+      }
+
+      // Check for left wall
+      if (classes.includes("_30c7ac6a")) {
+        walls.left = true;
+      }
+    });
+
+    return walls;
+  }
 
   cells.forEach((cell) => {
     const idx = parseInt(cell.getAttribute("data-cell-idx"));
@@ -75,40 +104,11 @@ function playZipPuzzle() {
     }
   });
 
-  // Helper function to detect walls on each side of a cell
-  function detectCellWalls(cell) {
-    const walls = { top: false, right: false, bottom: false, left: false };
-
-    // Look for child divs with specific wall classes
-    // LinkedIn uses:
-    // - _2f62539a for bottom walls (border-bottom-width: 12px)
-    // - _30c7ac6a for left walls (border-left-width: 12px)
-    // We only need bottom and left since walls are shared between adjacent cells
-
-    const childDivs = cell.querySelectorAll("div");
-
-    childDivs.forEach((div) => {
-      const classes = div.className;
-
-      // Check for bottom wall
-      if (classes.includes("_2f62539a")) {
-        walls.bottom = true;
-      }
-
-      // Check for left wall
-      if (classes.includes("_30c7ac6a")) {
-        walls.left = true;
-      }
-    });
-
-    return walls;
-  }
-
   console.log("Grid extracted:", grid);
   console.log(`Numbers range from 1 to ${maxNumber}`);
   console.log(`Walls detected: ${wallMap.size}`);
 
-  const path = solveZipPuzzle(grid, maxNumber, wallMap);
+  const path = solveZipPuzzle(grid, maxNumber, wallMap, width, height);
 
   if (!path) {
     console.error("No solution found!");
@@ -160,7 +160,7 @@ function playZipPuzzle() {
   }
 
   let delay = 0;
-  const clickDelay = 50; // Increased to 50ms for better reliability
+  const clickDelay = 50;
 
   path.forEach(([row, col], index) => {
     setTimeout(() => {
@@ -185,10 +185,7 @@ function playZipPuzzle() {
   console.log(`Playing solution with ${path.length} steps...`);
 }
 
-function solveZipPuzzle(grid, maxNumber, wallMap) {
-  const height = grid.length;
-  const width = grid[0].length;
-
+function solveZipPuzzle(grid, maxNumber, wallMap, width, height) {
   // Count only non-wall cells
   let validCells = 0;
   for (let r = 0; r < height; r++) {
@@ -415,7 +412,7 @@ function solveZipPuzzle(grid, maxNumber, wallMap) {
       );
     }
 
-    // Hard limit to prevent infinite loops
+    // Add a hard limit to prevent infinite loops
     if (attempts > 2000000) {
       console.error(
         "Exceeded maximum attempts (2M). Puzzle may be too complex or unsolvable."
@@ -462,7 +459,7 @@ function solveZipPuzzle(grid, maxNumber, wallMap) {
 
       const cellValue = numGrid[newPos[0]][newPos[1]];
 
-      // Skip walls (blocked cells)
+      // Skip walls
       if (cellValue === "WALL") continue;
 
       // If cell has a number, we can only visit it if it's the next number
@@ -490,18 +487,7 @@ function solveZipPuzzle(grid, maxNumber, wallMap) {
   return paths.length > 0 ? paths[0] : null;
 }
 
-// Listen for messages from popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "solvePuzzle") {
-    try {
-      playZipPuzzle();
-      sendResponse({ success: true, message: "Puzzle solver started!" });
-    } catch (error) {
-      console.error("Error solving puzzle:", error);
-      sendResponse({ success: false, message: error.message });
-    }
-  }
-  return true;
-});
-
-console.log("LinkedIn Zip Solver extension loaded!");
+// Run the solver
+console.log("🧩 LinkedIn Zip Solver with Wall Detection");
+console.log("==========================================");
+playZipPuzzle();
