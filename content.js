@@ -81,8 +81,8 @@ function playZipPuzzle() {
 
     // Look for child divs with specific wall classes
     // LinkedIn uses:
-    // - _2f62539a for bottom walls (border-bottom-width: 12px)
-    // - _30c7ac6a for left walls (border-left-width: 12px)
+    // - _2e574c8f for bottom walls (border-bottom-width: 12px)
+    // - b813a54d for left walls (border-left-width: 12px)
     // We only need bottom and left since walls are shared between adjacent cells
 
     const childDivs = cell.querySelectorAll("div");
@@ -91,12 +91,12 @@ function playZipPuzzle() {
       const classes = div.className;
 
       // Check for bottom wall
-      if (classes.includes("_2f62539a")) {
+      if (classes.includes("_2e574c8f")) {
         walls.bottom = true;
       }
 
       // Check for left wall
-      if (classes.includes("_30c7ac6a")) {
+      if (classes.includes("b813a54d")) {
         walls.left = true;
       }
     });
